@@ -11,26 +11,32 @@
 
 #include "deque.h"
 
-bool Deque::isEmpty() const {
+template<class T>
+bool Deque<T>::isEmpty() const {
 	return false;
 }
 
-int Deque::size() const {
+template<class T>
+int Deque<T>::size() const {
 	return 0;
 }
 
-void addFirst(T item) {
+template<class T>
+void Deque<T>::addFirst(T item) {
 	return;
 }
 
-void addLast(T item) {
+template<class T>
+void Deque<T>::addLast(T item) {
 	return;
 }
 
-T removeFirst() {
+template<class T>
+T Deque<T>::removeFirst() {
 }
 
-T removeLast() {
+template<class T>
+T Deque<T>::removeLast() {
 }
 
 int main() {
