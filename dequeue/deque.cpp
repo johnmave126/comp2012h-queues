@@ -40,5 +40,6 @@ T Deque<T>::removeLast() {
 }
 
 int main() {
+	Deque<int>::Iterator itr;
 	return 0;
 }
