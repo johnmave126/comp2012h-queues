@@ -13,7 +13,7 @@
 #define _DEQUE_H
 
 //Declaration of dequeue
-template<class T>
+template<typename T>
 class Deque {
 	private:
 		//Type definition
