@@ -591,7 +591,7 @@ typename Deque<T>::Node* Deque<T>::Iterator::findValid() const {
 		//preserve
 		return elem;
 	}
-	Deque<T>::Node* t = elem;
+	Node* t = elem;
 	//Iterate forward
 	while(!t->data && t->next) {
 		t = t->next;
@@ -640,8 +640,8 @@ Deque<T>::Deque()
 
 template<typename T>
 Deque<T>::~Deque() {
-	Deque<T>::Node *t = head;
-	Deque<T>::Node *p;
+	Node *t = head;
+	Node *p;
 	while(t) {
 		p = t;
 		t = t->next;
@@ -662,7 +662,7 @@ template<typename T>
 Deque<T>::Deque(const Deque<T>& q)
 :head(new Deque<T>::Node()), end(new Deque<T>::Node()),
  length(0) {
- 	Deque<T>::Node *t;
+ 	Node *t;
  	for(t = q.head->next; t->next; t = t->next) {
  		//Iterate over the list to do deep copy
  		addLast(t->data);
@@ -671,7 +671,7 @@ Deque<T>::Deque(const Deque<T>& q)
 
 template<typename T>
 Deque<T>& Deque<T>::operator=(const Deque<T>& q) {
- 	Deque<T>::Node *t;
+ 	Node *t;
 	//Empty the deque
 	while(!isEmpty()) {
 		removeFirst();
@@ -694,7 +694,7 @@ int Deque<T>::size() const {
 
 template<typename T>
 void Deque<T>::addFirst(T item) {
-	Deque<T>::Node *t = new Deque<T>::Node(item);
+	Node *t = new Node(item);
 	//Increase reference count
 	t->cnt++;
 	//Link to head->next
@@ -709,7 +709,7 @@ void Deque<T>::addFirst(T item) {
 
 template<typename T>
 void Deque<T>::addLast(T item) {
-	Deque<T>::Node *t = new Deque<T>::Node(item);
+	Node *t = new Node(item);
 	//Increase reference count
 	t->cnt++;
 	//Link to end->prev
@@ -724,7 +724,7 @@ void Deque<T>::addLast(T item) {
 
 template<typename T>
 T Deque<T>::removeFirst() {
-	Deque<T>::Node *t;
+	Node *t;
 	T temp;
 	if(isEmpty()) {
 		throw runtime_error("Trying to remove from an empty deque!");
@@ -750,7 +750,7 @@ T Deque<T>::removeFirst() {
 
 template<typename T>
 T Deque<T>::removeLast() {
-	Deque<T>::Node *t;
+	Node *t;
 	T temp;
 	if(isEmpty()) {
 		throw runtime_error("Trying to remove from an empty deque!");
