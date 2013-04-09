@@ -660,7 +660,8 @@ Deque<T>::~Deque() {
 
 template<typename T>
 Deque<T>::Deque(const Deque<T>& q)
-:head(new Deque<T>::Node()), end(new Deque<T>::Node()),
+:head(new typename Deque<T>::Node()),
+ end(new typename Deque<T>::Node()),
  length(0) {
  	Node *t;
  	for(t = q.head->next; t->next; t = t->next) {
