@@ -13,8 +13,16 @@
 #define _RANDOMIZED_QUEUE_H
 
 #include <stdexcept>
+#include <cstdlib>
+#include <cstring>
+#include <algorithm>
 
 using std::runtime_error;
+using std::sort;
+
+#ifndef RANDOMIZED_QUEUE_BASE
+#define RANDOMIZED_QUEUE_BASE 32
+#endif
 
 #ifndef FALSE
 #define FALSE 0
@@ -98,13 +106,13 @@ class RandomizedQueue {
 		class Node;
 		
 		//The array to store data
-		Node *arr;
+		Node **arr_elem;
 		
 		//The size of randomized queue
 		int length;
 		
 		//The array size of the inner array
-		int arr_size;
+		int size_arr;
 };
 
 //Iterator class
@@ -121,12 +129,6 @@ class RandomizedQueue<T>::Iterator {
 		 * If the randomized queue is empty, point to the first
 		 */
 		Iterator(const RandomizedQueue&);
-		
-		/* conversion constructor
-		 *
-		 * The iterator will point to the node specified
-		 */
-		Iterator(Node&);
 		
 		/* copy constructor */
 		Iterator(const Iterator&);
@@ -153,40 +155,10 @@ class RandomizedQueue<T>::Iterator {
 		T* operator->() const;
 		
 		/* comparison operators
-		 *
-		 * const to const comparison
-		 * if any of the iterator compared is not initialized or not valid
-		 * false will be returned
+		 * I found that comparison betwwen Iterators in randomized queue
+		 * is never pratical. So I omit the definition of comparison operator
+		 * for this.
 		 */
-		bool operator==(const Iterator&) const;
-		bool operator!=(const Iterator&) const;
-		
-		/* comparison operators
-		 *
-		 * const to non-const comparison
-		 * if any of the iterator compared is not initialized or not valid
-		 * false will be returned
-		 */
-		bool operator==(Iterator&) const;
-		bool operator!=(Iterator&) const;
-		
-		/* comparison operators
-		 *
-		 * non-const to const comparison
-		 * if any of the iterator compared is not initialized or not valid
-		 * false will be returned
-		 */
-		bool operator==(const Iterator&);
-		bool operator!=(const Iterator&);
-		
-		/* comparison operators
-		 *
-		 * non-const to non-const comparison
-		 * if any of the iterator compared is not initialized or not valid
-		 * false will be returned
-		 */
-		bool operator==(Iterator&);
-		bool operator!=(Iterator&);
 		
 		/* prefix/postfix ++ operator
 		 *
@@ -212,32 +184,52 @@ class RandomizedQueue<T>::Iterator {
 		/*
 		 * findValid
 		 *
-		 * node: the node to start finding
-		 *
-		 * return the address of the nearest valid node found
-		 * NULL for none found.
+		 * return the index of the nearest valid node found
+		 * size_arr for none found.
 		 */
-		Node* findValid() const;
+		int findValid() const;
+		
+		/*
+		 * findValidRev
+		 *
+		 * return the index of the nearest valid node found
+		 * size_arr for none found.
+		 * The reverse version of the above function.
+		 */
+		int findValidRev() const;
 		
 		/*
 		 * shiftNode
 		 *
-		 * node: the node to change to
+		 * idx: the index of the node to change to
 		 *
 		 * change the node the iterator pointing to to node
 		 */
-		void shiftNode(Node* node);
+		void shiftNode(int idx);
+		
+		/* used for sort */
+		struct _rnd_s {
+			int number;
+			int idx;
+		};
+		
+		static bool cmp_rnd_s(const _rnd_s& a, const _rnd_s& b) {
+			return (a.number < b.number);
+		}
 		
 		//Pointer to random element array
-		Node *arr_elem;
+		Node **arr_elem;
 		
 		//size fo the array
 		int size_arr;
+		
+		//current location
+		int loc;
 };
 
-//Node for double linked list
+//Node for array
 //All members are public for randomized queue to modify
-//These details are hided to outside classes
+//These details are hidden to outside classes
 template<typename T>
 class RandomizedQueue<T>::Node {
 	public:
@@ -292,13 +284,11 @@ RandomizedQueue<T>::Node::Node(const T& t)
 
 template<typename T>
 RandomizedQueue<T>::Node::Node(const RandomizedQueue<T>::Node& t)
-:data(new T(*(t.data))), prev(NULL), next(NULL),
- cnt(0) {
+:data(new T(*(t.data))), cnt(0) {
 }
 
 template<typename T>
 typename RandomizedQueue<T>::Node& RandomizedQueue<T>::Node::operator=(const RandomizedQueue<T>::Node& t) {
-	//Only copy data, leave prev/next and other stuff not changed
 	data = new T(t.data);
 	return *this;
 }
@@ -313,14 +303,6 @@ void RandomizedQueue<T>::Node::decCnt(RandomizedQueue<T>::Node *node) {
 			delete node->data;
 			node->data = NULL;
 		}
-		//Recycle the prev node if applicable
-		if(node->prev) {
-			decCnt(node->prev);
-		}
-		//Recycle the next node if applicable
-		if(node->next) {
-			decCnt(node->next);
-		}
 		//Delete the node
 		delete node;
 	}
@@ -329,63 +311,83 @@ void RandomizedQueue<T>::Node::decCnt(RandomizedQueue<T>::Node *node) {
 /* RandomizedQueue Iterator */
 template<typename T>
 RandomizedQueue<T>::Iterator::Iterator()
-:elem(NULL) {
+:arr_elem(NULL), size_arr(0), loc(0) {
 }
 
 template<typename T>
 RandomizedQueue<T>::Iterator::~Iterator() {
-	if(elem) {
+	if(arr_elem) {
 		//Decrement reference count
-		Node::decCnt(elem);
+		if(loc < size_arr) {
+			Node::decCnt(arr_elem[loc]);
+		}
+		delete [] arr_elem;
 	}
 }
 
 template<typename T>
 RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
-:elem(q.iterator().elem) {
-	//Increace reference count
-	elem->cnt++;
-}
-
-template<typename T>
-RandomizedQueue<T>::Iterator::Iterator(RandomizedQueue<T>::Node& p)
-:elem(&p) {
-	//Increace reference count
-	elem->cnt++;
+:arr_elem(new RandomizedQueue<T>::Node*[q.size()]),
+ size_arr(q.size()), loc(0) {
+	int i;
+	if(size_arr == 0) {
+		return;
+	}
+	_rnd_s *shuffle = new _rnd_s[q.size()];
+	//Generate a iterating sequence
+	//First generate a random number array
+	for(i = 0; i < size_arr; i++) {
+		shuffle[i].number = rand();
+		shuffle[i].idx = i;
+	}
+	//Sort it to get random idx sequence
+	sort(shuffle, shuffle + size_arr, cmp_rnd_s);
+	for(i = 0; i < q.size(); i++) {
+		arr_elem[i] = q.arr_elem[shuffle[i].idx];
+	}
+	//Initialize reference count
+	arr_elem[loc]->cnt++;
+	delete [] shuffle;
 }
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator=(const RandomizedQueue<T>::Iterator& itr) {
-	if(elem) {
-		//Decrement reference count
-		Node::decCnt(elem);
+	int i;
+	if(arr_elem) {
+		if(loc < size_arr) {
+			//Decrement reference count
+			Node::decCnt(arr_elem[loc]);
+		}
+		delete [] arr_elem;
+		arr_elem = NULL;
 	}
 	//Copy and increase reference count
-	elem = itr.findValid();
-	if(elem) {
-		elem->cnt++;
+	size_arr = itr.size_arr;
+	loc = itr.findValid();
+	if(loc < size_arr) {
+		itr.arr_elem[loc]->cnt++;
+	}
+	if(size_arr > 0) {
+		arr_elem = new Node*[size_arr];
+		for(i = 0; i < size_arr; i++) {
+			arr_elem[i] = itr.arr_elem[i];
+		}
 	}
 	return (*this);
 }
 
 template<typename T>
 T& RandomizedQueue<T>::Iterator::operator*() {
-	if(!elem) {
+	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
-	Node* t = findValid();
-	if(!t) {
-		//Clear the iterator
-		Node::decCnt(elem);
-		elem = NULL;
-		throw runtime_error("Iterator no longer valid!");
+	int tid = findValid();
+	shiftNode(tid);
+	if(tid >= size_arr) {
+		//End of a queue
+		throw runtime_error("End of randomized queue!");
 	}
-	shiftNode(t);
-	if(!elem->data) {
-		//head or end of a deque
-		throw runtime_error("Empty deque!");
-	}
-	return *(elem->data);
+	return *(arr_elem[loc]->data);
 }
 
 template<typename T>
@@ -396,19 +398,19 @@ T* RandomizedQueue<T>::Iterator::operator->() {
 
 template<typename T>
 T& RandomizedQueue<T>::Iterator::operator*() const{
-	if(!elem) {
+	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
-	Node* t = findValid();
-	if(!t || elem != t) {
+	int tid = findValid();
+	if(loc != tid) {
 		//Not valid or pointed to a invalid one
 		throw runtime_error("Iterator no longer valid!");
 	}
-	if(!elem->data) {
-		//head or end of a deque
-		throw runtime_error("Empty deque!");
+	if(loc >= size_arr) {
+		//End of a queue
+		throw runtime_error("End of randomized queue!");
 	}
-	return *(elem->data);
+	return *(arr_elem[loc]->data);
 }
 
 template<typename T>
@@ -418,114 +420,23 @@ T* RandomizedQueue<T>::Iterator::operator->() const{
 }
 
 template<typename T>
-bool RandomizedQueue<T>::Iterator::operator==(const RandomizedQueue<T>::Iterator& itr) const {
-	if(!elem || !itr.elem) {
-		return false;
-	}
-	Node* t1 = findValid();
-	Node* t2 = itr.findValid();
-	if(!t1 || !t2 || t1 != elem || t2 != itr.elem) {
-		return false;
-	}
-	return t1 == t2;
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator!=(const RandomizedQueue<T>::Iterator& itr) const {
-	return !((*this) == itr);
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator==(RandomizedQueue<T>::Iterator& itr) const {
-	if(!elem || !itr.elem) {
-		return false;
-	}
-	Node* t1 = findValid();
-	Node* t2 = itr.findValid();
-	//Change the current node if needed
-	itr.shiftNode(t2);
-	if(!t1 || !t2 || t1 != elem) {
-		return false;
-	}
-	return t1 == t2;
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator!=(RandomizedQueue<T>::Iterator& itr) const {
-	return !((*this) == itr);
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator==(const RandomizedQueue<T>::Iterator& itr) {
-	if(!elem || !itr.elem) {
-		return false;
-	}
-	Node* t1 = findValid();
-	Node* t2 = itr.findValid();
-	//Change the current node if needed
-	shiftNode(t1);
-	if(!t1 || !t2 || t2 != itr.elem) {
-		return false;
-	}
-	return t1 == t2;
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator!=(const RandomizedQueue<T>::Iterator& itr) {
-	return !((*this) == itr);
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator==(RandomizedQueue<T>::Iterator& itr) {
-	if(!elem || !itr.elem) {
-		return false;
-	}
-	Node* t1 = findValid();
-	Node* t2 = itr.findValid();
-	//Change the current node if needed
-	shiftNode(t1);
-	itr.shiftNode(t2);
-	if(!t1 || !t2) {
-		return false;
-	}
-	return t1 == t2;
-}
-
-template<typename T>
-bool RandomizedQueue<T>::Iterator::operator!=(RandomizedQueue<T>::Iterator& itr) {
-	return !((*this) == itr);
-}
-
-template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator++() {
-	if(!elem) {
+	int new_loc;
+	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
-	if(!elem->prev && elem->next) {
-		//head of a deque
-		//randomized queue once empty
-		if(elem->next->next) {
-			//not empty
-			shiftNode(elem->next->next);
-		}
+	if(size_arr == 0) {
+		throw runtime_error("Empty randomized queue!");
 	}
-	Node* t = findValid();
+	new_loc = findValid();
 	//Shift to valid node
-	shiftNode(t);
-	if(!elem) {
-		throw runtime_error("Iterator no longer valid!");
+	shiftNode(new_loc);
+	if(loc == size_arr) {
+		throw runtime_error("At the end of the randomized queue!");
 	}
-	if(!elem->next && elem->prev) {
-		//end of the deque
-		throw runtime_error("At the end of the deque!");
-	}
-	if(!elem->data) {
-		//head of deque
-		//randomized queue is empty
-		throw runtime_error("Empty deque!");
-	}
-	//Move to next
-	shiftNode(elem->next);
+	loc++;
+	new_loc = findValid();
+	shiftNode(new_loc);
 	return (*this);
 }
 
@@ -539,26 +450,27 @@ typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator++(i
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator--() {
-	if(!elem) {
+	int new_loc;
+	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
-	Node* t = findValid();
+	if(size_arr == 0) {
+		throw runtime_error("Empty randomized queue!");
+	}
+	new_loc = findValid();
 	//Shift to valid node
-	shiftNode(t);
-	if(!elem) {
-		throw runtime_error("Iterator no longer valid!");
+	shiftNode(new_loc);
+	if(loc == 0) {
+		throw runtime_error("At the beginning of the randomized queue!");
 	}
-	if(!elem->data) {
-		//head of deque
-		//randomized queue is empty
-		throw runtime_error("Empty deque!");
+	loc--;
+	new_loc = findValidRev();
+	if(new_loc < 0) {
+		//Restore
+		loc++;
+		throw runtime_error("At the beginning of the randomized queue!");
 	}
-	if(!elem->prev->prev) {
-		//end of the deque
-		throw runtime_error("At the beginning of the deque!");
-	}
-	//Move to previous
-	shiftNode(elem->prev);
+	shiftNode(new_loc);
 	return (*this);
 }
 
@@ -571,110 +483,118 @@ typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator--(i
 }
 
 template<typename T>
-typename RandomizedQueue<T>::Node* RandomizedQueue<T>::Iterator::findValid() const {
-	if(elem->data) {
+int RandomizedQueue<T>::Iterator::findValid() const {
+	int i;
+	if(loc == size_arr) {
+		//End of iteration
+		//Preserve
+		return loc;
+	}
+	if(arr_elem[loc]->data) {
 		//Valid
-		return elem;
+		return loc;
 	}
-	if(!elem->next && elem->prev) {
-		//End of deque
-		//preserve
-		return elem;
+	//Move forward
+	for(i = loc + 1; i < size_arr && !arr_elem[i]->data; i++) {
 	}
-	RandomizedQueue<T>::Node* t = elem;
-	//Iterate forward
-	while(!t->data && t->next) {
-		t = t->next;
-	}
-	if(t->data) {
-		//Valid
-		return t;
-	}
-	//Now t->next is null
-	if(!t->prev) {
-		//destroyed deque
-		return NULL;
-	}
-	//End of deque
-	//Go backwards
-	return t->prev;
+	return i;
 }
 
 template<typename T>
-void RandomizedQueue<T>::Iterator::shiftNode(RandomizedQueue<T>::Node* node) {
-	if(node) {
+int RandomizedQueue<T>::Iterator::findValidRev() const {
+	int i;
+	if(loc == size_arr) {
+		//End of iteration
+		//Preserve
+		return loc;
+	}
+	if(arr_elem[loc]->data) {
+		//Valid
+		return loc;
+	}
+	//Move backward
+	for(i = loc - 1; i >= 0 && !arr_elem[i]->data; i--) {
+	}
+	return i;
+}
+
+template<typename T>
+void RandomizedQueue<T>::Iterator::shiftNode(int idx) {
+	if(idx != size_arr) {
 		//Shift to a existing node
 		//Thread safety
-		node->cnt++;
-		Node::decCnt(elem);
-		elem = node;
+		arr_elem[idx]->cnt++;
 	}
-	else {
-		//Release current element
-		Node::decCnt(elem);
-		elem = NULL;
+	if(loc != size_arr) {
+		//Release element
+		Node::decCnt(arr_elem[loc]);
 	}
+	loc = idx;
 }
 
 /* RandomizedQueue */
 template<typename T>
 RandomizedQueue<T>::RandomizedQueue()
-:head(new Node()), end(new Node()),
- length(0) {
-	//Generate an empty list
-	head->next = end;
-	end->prev = head;
-	head->cnt++;
-	end->cnt++;
+:arr_elem(new RandomizedQueue<T>::Node*[RANDOMIZED_QUEUE_BASE]),
+ length(0), size_arr(RANDOMIZED_QUEUE_BASE) {
+ 	//Reset array
+ 	memset(arr_elem, 0, size_arr * sizeof(Node*));
 }
 
 template<typename T>
 RandomizedQueue<T>::~RandomizedQueue() {
-	RandomizedQueue<T>::Node *t = head;
-	RandomizedQueue<T>::Node *p;
-	while(t) {
-		p = t;
-		t = t->next;
-		//Make the node independent
-		p->prev = NULL;
-		p->next = NULL;
-		//Free the data
-		if(p->data) {
-			delete p->data;
-			p->data = NULL;
+	int i;
+	if(arr_elem) {
+		for(i = 0; i < length; i++) {
+			//Free the data
+			if(arr_elem[i]->data) {
+				delete arr_elem[i]->data;
+				arr_elem[i]->data = NULL;
+			}
+			//Decrease the reference count
+			Node::decCnt(arr_elem[i]);
 		}
-		//Decrease the reference count
-		Node::decCnt(p);
+		delete [] arr_elem;
 	}
 }
 
 template<typename T>
 RandomizedQueue<T>::RandomizedQueue(const RandomizedQueue<T>& q)
-:head(new RandomizedQueue<T>::Node()), end(new RandomizedQueue<T>::Node()),
- length(0) {
- 	RandomizedQueue<T>::Node *t;
- 	for(t = q.head->next; t->next; t = t->next) {
+:arr_elem(new RandomizedQueue<T>::Node*[q.size_arr]),
+ length(0), size_arr(q.size_arr) {
+ 	int i;
+ 	for(i = 0; i < q.length; i++) {
  		//Iterate over the list to do deep copy
- 		addLast(t->data);
+ 		enqueue(*(q.arr_elem[i]->data));
  	}
+ 	//Clean the rest
+ 	memset(arr_elem + i, 0, (size_arr - i) * sizeof(Node*));
 }
 
 template<typename T>
 RandomizedQueue<T>& RandomizedQueue<T>::operator=(const RandomizedQueue<T>& q) {
- 	RandomizedQueue<T>::Node *t;
-	//Empty the deque
-	while(!isEmpty()) {
-		removeFirst();
+ 	int i;
+	//Empty the randomized queue
+	for(i = 0; i < length; i++) {
+		Node::decCnt(arr_elem[i]);
 	}
- 	for(t = q.head->next; t->next; t = t->next) {
- 		//Iterate over the list to do deep copy
- 		addLast(t->data);
+ 	//Clean the pointer
+ 	memset(arr_elem, 0, length * sizeof(Node*));
+	length = 0;
+	if(q.size_arr > size_arr) {
+		size_arr = q.size_arr;
+		delete [] arr_elem;
+		arr_elem = new Node**[size_arr];
+	}
+ 	for(i = 0; i < q.length; i++) {
+ 		//Iterate over the array to do deep copy
+ 		enqueue(*(q.arr_elem[i]->data));
  	}
 }
 
 template<typename T>
 bool RandomizedQueue<T>::isEmpty() const {
-	return head->next == end;
+	return length == 0;
 }
 
 template<typename T>
@@ -683,93 +603,71 @@ int RandomizedQueue<T>::size() const {
 }
 
 template<typename T>
-void RandomizedQueue<T>::addFirst(T item) {
-	RandomizedQueue<T>::Node *t = new RandomizedQueue<T>::Node(item);
+void RandomizedQueue<T>::enqueue(T item) {
+	Node **new_mem;
+	Node *t = new Node(item);
 	//Increase reference count
 	t->cnt++;
-	//Link to head->next
-	t->next = head->next;
-	head->next->prev = t;
-	//Link to head
-	t->prev = head;
-	head->next = t;
+	//Test space
+	if(length == size_arr) {
+		//Enlarge the array
+		new_mem = new Node*[size_arr<<1];
+		memcpy(new_mem, arr_elem, size_arr * sizeof(Node*));
+		memset(new_mem + size_arr, 0, size_arr * sizeof(Node*));
+		size_arr <<= 1;
+		delete [] arr_elem;
+		arr_elem = new_mem;
+	}
 	//Increase size
+	arr_elem[length] = t;
 	length++;
 }
 
 template<typename T>
-void RandomizedQueue<T>::addLast(T item) {
-	RandomizedQueue<T>::Node *t = new RandomizedQueue<T>::Node(item);
-	//Increase reference count
-	t->cnt++;
-	//Link to end->prev
-	t->prev = end->prev;
-	end->prev->next = t;
-	//Link to end
-	t->next = end;
-	end->prev = t;
-	//Increase size
-	length++;
-}
-
-template<typename T>
-T RandomizedQueue<T>::removeFirst() {
-	RandomizedQueue<T>::Node *t;
+T RandomizedQueue<T>::dequeue() {
+	int rm_id;
+	Node *t;
+	Node **new_mem;
 	T temp;
 	if(isEmpty()) {
 		throw runtime_error("Trying to remove from an empty deque!");
 	}
-	//Detach the first node
-	t = head->next;
-	t->next->prev = head;
-	head->next = t->next;
-	//Increase the reference count of head and head->next
-	head->cnt++;
-	head->next->cnt++;
-	//Store the data into temp
+	rm_id = (int)((1.0 * rand() / RAND_MAX) * length);
+	//Swap this with the last one in the array
+	t = arr_elem[rm_id];
+	arr_elem[rm_id] = arr_elem[length - 1];
+	//Shrink
+	length--;
+	//Test space
+	if(size_arr > RANDOMIZED_QUEUE_BASE && (size_arr >> 2) >= length) {
+		//Shrink array space
+		new_mem = new Node*[size_arr >> 1];
+		memcpy(new_mem, arr_elem, (size_arr>>1) * sizeof(Node*));
+		size_arr >>= 1;
+		delete [] arr_elem;
+		arr_elem = new_mem;
+	}
 	temp = *(t->data);
-	//Free the memory of data
+	arr_elem[length] = NULL;
 	delete t->data;
 	t->data = NULL;
-	//Decrease the reference count of the detached node
-	RandomizedQueue<T>::Node::decCnt(t);
-	//Decrease size
-	length--;
+	Node::decCnt(t);
 	return temp;
 }
 
 template<typename T>
-T RandomizedQueue<T>::removeLast() {
-	RandomizedQueue<T>::Node *t;
-	T temp;
-	if(isEmpty()) {
-		throw runtime_error("Trying to remove from an empty deque!");
-	}
-	//Detach the last node
-	t = end->prev;
-	t->prev->next = end;
-	end->prev = t->prev;
-	//Increase the reference count of head and head->next
-	end->cnt++;
-	end->prev->cnt++;
-	//Store the data into temp
-	temp = *(t->data);
-	//Free the memory of data
-	delete t->data;
-	t->data = NULL;
-	//Decrease the reference count of the detached node
-	RandomizedQueue<T>::Node::decCnt(t);
-	//Decrease size
-	length--;
-	return temp;
+T RandomizedQueue<T>::sample() const {
+	int rm_id;
+	rm_id = (int)((1.0 * rand() / RAND_MAX) * length);
+	return *(arr_elem[rm_id]->data);
 }
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::iterator() {
 	if(isEmpty()) {
-		return Iterator(*head);
+		return Iterator();
 	}
-	return Iterator(*(head->next));
+	return Iterator(*(this));
 }
 
 #endif

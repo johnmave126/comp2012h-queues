@@ -6,7 +6,7 @@ CP=cp
 CFLAGS=-O2 -Wextra -Wall -g
 CPPFLAGS=$(CFLAGS) 
 
-all: RANDQUE_test
+all: randomized_queue_test
 
 RANDQUE=randomized_queue.h
 RANDQUE_TEST_O=main_rand.o
@@ -16,6 +16,6 @@ RANDQUE_TEST_O=main_rand.o
 
 $(RANDQUE_TEST_O): $(RANDQUE)
 
-RANDQUE_test: $(RANDQUE_TEST_O) $(RANDQUE)
-	$(CPP) -o RANDQUE $(CPPFLAGS) $(RANDQUE_TEST_O)
+randomized_queue_test: $(RANDQUE_TEST_O) $(RANDQUE)
+	$(CPP) -o randomized_queue_test $(CPPFLAGS) $(RANDQUE_TEST_O)
 
