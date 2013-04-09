@@ -3,15 +3,19 @@ CPP=g++
 AR=ar
 RM=rm
 CP=cp
-CFLAGS=-O2 -Wall -g
+CFLAGS=-O2 -Wextra -Wall -g
 CPPFLAGS=$(CFLAGS) 
 
-all: deque
+all: deque_test
 
-DEQUE_OBJ=deque.o
+DEQUE=deque.h
+DEQUE_TEST_O=main_deque.o
 
 .cpp.o:
 	$(CPP) -c $(CPPFLAGS) $*.cpp
 
-deque: $(DEQUE_OBJ)
-	$(CPP) -o deque $(CPPFLAGS) $(DEQUE_OBJ)
+$(DEQUE_TEST_O): $(DEQUE)
+
+deque_test: $(DEQUE_TEST_O) $(DEQUE)
+	$(CPP) -o deque $(CPPFLAGS) $(DEQUE_TEST_O)
+

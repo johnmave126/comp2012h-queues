@@ -1,16 +1,16 @@
 /*
- * Dequeue for COMP2012H
+ * Randomized Queue for COMP2012H
  * Author: TAN, Shuhao
  * Stu ID: 20090398
  * 2013 Spring
  *
- * deque.h
+ * randomized_queue.h
  *
- * header file for dequeue
+ * header file for randomized queue
  */
 
-#ifndef _DEQUE_H
-#define _DEQUE_H
+#ifndef _RANDOMIZED_QUEUE_H
+#define _RANDOMIZED_QUEUE_H
 
 #include <stdexcept>
 
@@ -28,72 +28,63 @@ using std::runtime_error;
 #define NULL 0
 #endif
 
-//Declaration of dequeue
+//Declaration of randomized queue
 template<typename T>
-class Deque {
+class RandomizedQueue {
 	public:
 		//Declare iterator class
 		class Iterator;
 		
 		/* default constructor/destructor */
-		Deque();
-		~Deque();
+		RandomizedQueue();
+		~RandomizedQueue();
 		
 		/* copy constructor */
-		Deque(const Deque<T>& q);
+		RandomizedQueue(const RandomizedQueue<T>& q);
 		
 		/* assign operator */
-		Deque<T>& operator=(const Deque<T>& q);
+		RandomizedQueue<T>& operator=(const RandomizedQueue<T>& q);
 		
 		/*
 		 * isEmpty
 		 *
-		 * return true if the dequeue is empty
+		 * return true if the randomized queue is empty
 		 */
 		bool isEmpty() const;
 		
 		/*
 		 * size
 		 *
-		 * return the size of the dequeue
+		 * return the size of the randomized queue
 		 */
 		int size() const;
 		
 		/*
-		 * addFirst
+		 * enqueue
 		 *
 		 * item: the item to add
 		 *
-		 * insert the item at the front of the dequeue
+		 * insert the item in the queue
 		 */
-		void addFirst(T item);
+		void enqueue(T item);
 		
 		/*
-		 * addLast
+		 * dequeue
 		 *
-		 * item: the item to add
+		 * throw runtime_error if trying to remove from an queue
 		 *
-		 * insert the item at the end of the dequeue
+		 * delete and return a random item in randomized queue
 		 */
-		void addLast(T item);
+		T dequeue();
 		
 		/*
-		 * removeFirst
+		 * sample
 		 *
-		 * throw runtime_error if trying to remove from an empty deque
+		 * throw runtime_error if trying to sample from an empty deque
 		 *
-		 * delete and return the first item in dequeue
+		 * return a random item in randomized queue
 		 */
-		T removeFirst();
-		
-		/*
-		 * removeLast
-		 *
-		 * throw runtime_error if trying to remove from an empty deque
-		 *
-		 * delete and return the last item in dequeue
-		 */
-		T removeLast();
+		T sample() const;
 		
 		/*
 		 * iterator
@@ -106,19 +97,19 @@ class Deque {
 		//Declare nested class Node
 		class Node;
 		
-		//The pseudo head
-		Node *head;
+		//The array to store data
+		Node *arr;
 		
-		//The pseudo end
-		Node *end;
-		
-		//The size of deque
+		//The size of randomized queue
 		int length;
+		
+		//The array size of the inner array
+		int arr_size;
 };
 
 //Iterator class
 template<typename T>
-class Deque<T>::Iterator {
+class RandomizedQueue<T>::Iterator {
 	public:
 		/* default constructor/destructor */
 		Iterator();
@@ -126,10 +117,10 @@ class Deque<T>::Iterator {
 		
 		/* conversion constructor
 		 *
-		 * The iterator will point to the first element of Deque
-		 * If the deque is empty, point to the first
+		 * The iterator will point to the first element of RandomizedQueue
+		 * If the randomized queue is empty, point to the first
 		 */
-		Iterator(const Deque&);
+		Iterator(const RandomizedQueue&);
 		
 		/* conversion constructor
 		 *
@@ -147,7 +138,7 @@ class Deque<T>::Iterator {
 		 *
 		 * non-const version
 		 * throw runtime_error if the node pointed to belongs to
-		 * a deque destroyed, or the iterator points to no node
+		 * a randomized queue destroyed, or the iterator points to no node
 		 */
 		T& operator*();
 		T* operator->();
@@ -156,7 +147,7 @@ class Deque<T>::Iterator {
 		 *
 		 * const version
 		 * throw runtime_error if the node pointed to belongs to
-		 * a deque destroyed, or the iterator points to no node
+		 * a randomized queue destroyed, or the iterator points to no node
 		 */
 		T& operator*() const;
 		T* operator->() const;
@@ -200,7 +191,7 @@ class Deque<T>::Iterator {
 		/* prefix/postfix ++ operator
 		 *
 		 * throw runtime_error if the node pointed to belongs to
-		 * a deque destroyed, or the iterator points to no node.
+		 * a randomized queue destroyed, or the iterator points to no node.
 		 * If the iterator comes to the end of the deque, there 
 		 * will be no change to the iterator.
 		 */
@@ -210,7 +201,7 @@ class Deque<T>::Iterator {
 		/* prefix/postfix -- operator
 		 *
 		 * throw runtime_error if the node pointed to belongs to
-		 * a deque destroyed, or the iterator points to no node.
+		 * a randomized queue destroyed, or the iterator points to no node.
 		 * If the iterator comes to the beginning of the deque, there 
 		 * will be no change to the iterator.
 		 */
@@ -237,15 +228,18 @@ class Deque<T>::Iterator {
 		 */
 		void shiftNode(Node* node);
 		
-		//Pointer to element
-		Node *elem;
+		//Pointer to random element array
+		Node *arr_elem;
+		
+		//size fo the array
+		int size_arr;
 };
 
 //Node for double linked list
-//All members are public for deque to modify
+//All members are public for randomized queue to modify
 //These details are hided to outside classes
 template<typename T>
-class Deque<T>::Node {
+class RandomizedQueue<T>::Node {
 	public:
 		/* default constructor/destructor */
 		Node();
@@ -272,49 +266,45 @@ class Deque<T>::Node {
 		
 		//Store the data
 		T *data;
-		//Previous and Next node
-		Node *prev;
-		Node *next;
+		
 		//Reference count
 		int cnt;
 };
 
 //Implementation begins
-/* Deque Node */
+/* RandomizedQueue Node */
 template<typename T>
-Deque<T>::Node::Node()
-:data(NULL), prev(NULL), next(NULL),
- cnt(0) {
+RandomizedQueue<T>::Node::Node()
+:data(NULL), cnt(0) {
 }
 
 template<typename T>
-Deque<T>::Node::~Node() {
+RandomizedQueue<T>::Node::~Node() {
 	if(data) {
 		delete data;
 	}
 }
 
 template<typename T>
-Deque<T>::Node::Node(const T& t)
-:data(new T(t)), prev(NULL), next(NULL),
- cnt(0) {
+RandomizedQueue<T>::Node::Node(const T& t)
+:data(new T(t)), cnt(0) {
 }
 
 template<typename T>
-Deque<T>::Node::Node(const Deque<T>::Node& t)
+RandomizedQueue<T>::Node::Node(const RandomizedQueue<T>::Node& t)
 :data(new T(*(t.data))), prev(NULL), next(NULL),
  cnt(0) {
 }
 
 template<typename T>
-typename Deque<T>::Node& Deque<T>::Node::operator=(const Deque<T>::Node& t) {
+typename RandomizedQueue<T>::Node& RandomizedQueue<T>::Node::operator=(const RandomizedQueue<T>::Node& t) {
 	//Only copy data, leave prev/next and other stuff not changed
 	data = new T(t.data);
 	return *this;
 }
 
 template<typename T>
-void Deque<T>::Node::decCnt(Deque<T>::Node *node) {
+void RandomizedQueue<T>::Node::decCnt(RandomizedQueue<T>::Node *node) {
 	node->cnt--;
 	if(node->cnt == 0) {
 		//Recycle the memory
@@ -336,14 +326,14 @@ void Deque<T>::Node::decCnt(Deque<T>::Node *node) {
 	}
 }
 
-/* Deque Iterator */
+/* RandomizedQueue Iterator */
 template<typename T>
-Deque<T>::Iterator::Iterator()
+RandomizedQueue<T>::Iterator::Iterator()
 :elem(NULL) {
 }
 
 template<typename T>
-Deque<T>::Iterator::~Iterator() {
+RandomizedQueue<T>::Iterator::~Iterator() {
 	if(elem) {
 		//Decrement reference count
 		Node::decCnt(elem);
@@ -351,21 +341,21 @@ Deque<T>::Iterator::~Iterator() {
 }
 
 template<typename T>
-Deque<T>::Iterator::Iterator(const Deque<T>& q)
+RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 :elem(q.iterator().elem) {
 	//Increace reference count
 	elem->cnt++;
 }
 
 template<typename T>
-Deque<T>::Iterator::Iterator(Deque<T>::Node& p)
+RandomizedQueue<T>::Iterator::Iterator(RandomizedQueue<T>::Node& p)
 :elem(&p) {
 	//Increace reference count
 	elem->cnt++;
 }
 
 template<typename T>
-typename Deque<T>::Iterator& Deque<T>::Iterator::operator=(const Deque<T>::Iterator& itr) {
+typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator=(const RandomizedQueue<T>::Iterator& itr) {
 	if(elem) {
 		//Decrement reference count
 		Node::decCnt(elem);
@@ -379,7 +369,7 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator=(const Deque<T>::Itera
 }
 
 template<typename T>
-T& Deque<T>::Iterator::operator*() {
+T& RandomizedQueue<T>::Iterator::operator*() {
 	if(!elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
@@ -399,13 +389,13 @@ T& Deque<T>::Iterator::operator*() {
 }
 
 template<typename T>
-T* Deque<T>::Iterator::operator->() {
+T* RandomizedQueue<T>::Iterator::operator->() {
 	//Reuse operator*
 	return &(*(*this));
 }
 
 template<typename T>
-T& Deque<T>::Iterator::operator*() const{
+T& RandomizedQueue<T>::Iterator::operator*() const{
 	if(!elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
@@ -422,13 +412,13 @@ T& Deque<T>::Iterator::operator*() const{
 }
 
 template<typename T>
-T* Deque<T>::Iterator::operator->() const{
+T* RandomizedQueue<T>::Iterator::operator->() const{
 	//Reuse operator*
 	return &(*(*this));
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator==(const Deque<T>::Iterator& itr) const {
+bool RandomizedQueue<T>::Iterator::operator==(const RandomizedQueue<T>::Iterator& itr) const {
 	if(!elem || !itr.elem) {
 		return false;
 	}
@@ -441,12 +431,12 @@ bool Deque<T>::Iterator::operator==(const Deque<T>::Iterator& itr) const {
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator!=(const Deque<T>::Iterator& itr) const {
+bool RandomizedQueue<T>::Iterator::operator!=(const RandomizedQueue<T>::Iterator& itr) const {
 	return !((*this) == itr);
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator==(Deque<T>::Iterator& itr) const {
+bool RandomizedQueue<T>::Iterator::operator==(RandomizedQueue<T>::Iterator& itr) const {
 	if(!elem || !itr.elem) {
 		return false;
 	}
@@ -461,12 +451,12 @@ bool Deque<T>::Iterator::operator==(Deque<T>::Iterator& itr) const {
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator!=(Deque<T>::Iterator& itr) const {
+bool RandomizedQueue<T>::Iterator::operator!=(RandomizedQueue<T>::Iterator& itr) const {
 	return !((*this) == itr);
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator==(const Deque<T>::Iterator& itr) {
+bool RandomizedQueue<T>::Iterator::operator==(const RandomizedQueue<T>::Iterator& itr) {
 	if(!elem || !itr.elem) {
 		return false;
 	}
@@ -481,12 +471,12 @@ bool Deque<T>::Iterator::operator==(const Deque<T>::Iterator& itr) {
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator!=(const Deque<T>::Iterator& itr) {
+bool RandomizedQueue<T>::Iterator::operator!=(const RandomizedQueue<T>::Iterator& itr) {
 	return !((*this) == itr);
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator==(Deque<T>::Iterator& itr) {
+bool RandomizedQueue<T>::Iterator::operator==(RandomizedQueue<T>::Iterator& itr) {
 	if(!elem || !itr.elem) {
 		return false;
 	}
@@ -502,18 +492,18 @@ bool Deque<T>::Iterator::operator==(Deque<T>::Iterator& itr) {
 }
 
 template<typename T>
-bool Deque<T>::Iterator::operator!=(Deque<T>::Iterator& itr) {
+bool RandomizedQueue<T>::Iterator::operator!=(RandomizedQueue<T>::Iterator& itr) {
 	return !((*this) == itr);
 }
 
 template<typename T>
-typename Deque<T>::Iterator& Deque<T>::Iterator::operator++() {
+typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator++() {
 	if(!elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
 	if(!elem->prev && elem->next) {
 		//head of a deque
-		//deque once empty
+		//randomized queue once empty
 		if(elem->next->next) {
 			//not empty
 			shiftNode(elem->next->next);
@@ -531,7 +521,7 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator++() {
 	}
 	if(!elem->data) {
 		//head of deque
-		//deque is empty
+		//randomized queue is empty
 		throw runtime_error("Empty deque!");
 	}
 	//Move to next
@@ -540,7 +530,7 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator++() {
 }
 
 template<typename T>
-typename Deque<T>::Iterator Deque<T>::Iterator::operator++(int) {
+typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator++(int) {
 	//Reuse prefix ++
 	Iterator tmp = *this;
 	(*this)++;
@@ -548,7 +538,7 @@ typename Deque<T>::Iterator Deque<T>::Iterator::operator++(int) {
 }
 
 template<typename T>
-typename Deque<T>::Iterator& Deque<T>::Iterator::operator--() {
+typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator--() {
 	if(!elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
@@ -560,7 +550,7 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator--() {
 	}
 	if(!elem->data) {
 		//head of deque
-		//deque is empty
+		//randomized queue is empty
 		throw runtime_error("Empty deque!");
 	}
 	if(!elem->prev->prev) {
@@ -573,7 +563,7 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator--() {
 }
 
 template<typename T>
-typename Deque<T>::Iterator Deque<T>::Iterator::operator--(int) {
+typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator--(int) {
 	//Reuse prefix --
 	Iterator tmp = *this;
 	(*this)--;
@@ -581,7 +571,7 @@ typename Deque<T>::Iterator Deque<T>::Iterator::operator--(int) {
 }
 
 template<typename T>
-typename Deque<T>::Node* Deque<T>::Iterator::findValid() const {
+typename RandomizedQueue<T>::Node* RandomizedQueue<T>::Iterator::findValid() const {
 	if(elem->data) {
 		//Valid
 		return elem;
@@ -591,7 +581,7 @@ typename Deque<T>::Node* Deque<T>::Iterator::findValid() const {
 		//preserve
 		return elem;
 	}
-	Deque<T>::Node* t = elem;
+	RandomizedQueue<T>::Node* t = elem;
 	//Iterate forward
 	while(!t->data && t->next) {
 		t = t->next;
@@ -611,7 +601,7 @@ typename Deque<T>::Node* Deque<T>::Iterator::findValid() const {
 }
 
 template<typename T>
-void Deque<T>::Iterator::shiftNode(Deque<T>::Node* node) {
+void RandomizedQueue<T>::Iterator::shiftNode(RandomizedQueue<T>::Node* node) {
 	if(node) {
 		//Shift to a existing node
 		//Thread safety
@@ -626,9 +616,9 @@ void Deque<T>::Iterator::shiftNode(Deque<T>::Node* node) {
 	}
 }
 
-/* Deque */
+/* RandomizedQueue */
 template<typename T>
-Deque<T>::Deque()
+RandomizedQueue<T>::RandomizedQueue()
 :head(new Node()), end(new Node()),
  length(0) {
 	//Generate an empty list
@@ -639,9 +629,9 @@ Deque<T>::Deque()
 }
 
 template<typename T>
-Deque<T>::~Deque() {
-	Deque<T>::Node *t = head;
-	Deque<T>::Node *p;
+RandomizedQueue<T>::~RandomizedQueue() {
+	RandomizedQueue<T>::Node *t = head;
+	RandomizedQueue<T>::Node *p;
 	while(t) {
 		p = t;
 		t = t->next;
@@ -659,10 +649,10 @@ Deque<T>::~Deque() {
 }
 
 template<typename T>
-Deque<T>::Deque(const Deque<T>& q)
-:head(new Deque<T>::Node()), end(new Deque<T>::Node()),
+RandomizedQueue<T>::RandomizedQueue(const RandomizedQueue<T>& q)
+:head(new RandomizedQueue<T>::Node()), end(new RandomizedQueue<T>::Node()),
  length(0) {
- 	Deque<T>::Node *t;
+ 	RandomizedQueue<T>::Node *t;
  	for(t = q.head->next; t->next; t = t->next) {
  		//Iterate over the list to do deep copy
  		addLast(t->data);
@@ -670,8 +660,8 @@ Deque<T>::Deque(const Deque<T>& q)
 }
 
 template<typename T>
-Deque<T>& Deque<T>::operator=(const Deque<T>& q) {
- 	Deque<T>::Node *t;
+RandomizedQueue<T>& RandomizedQueue<T>::operator=(const RandomizedQueue<T>& q) {
+ 	RandomizedQueue<T>::Node *t;
 	//Empty the deque
 	while(!isEmpty()) {
 		removeFirst();
@@ -683,18 +673,18 @@ Deque<T>& Deque<T>::operator=(const Deque<T>& q) {
 }
 
 template<typename T>
-bool Deque<T>::isEmpty() const {
+bool RandomizedQueue<T>::isEmpty() const {
 	return head->next == end;
 }
 
 template<typename T>
-int Deque<T>::size() const {
+int RandomizedQueue<T>::size() const {
 	return length;
 }
 
 template<typename T>
-void Deque<T>::addFirst(T item) {
-	Deque<T>::Node *t = new Deque<T>::Node(item);
+void RandomizedQueue<T>::addFirst(T item) {
+	RandomizedQueue<T>::Node *t = new RandomizedQueue<T>::Node(item);
 	//Increase reference count
 	t->cnt++;
 	//Link to head->next
@@ -708,8 +698,8 @@ void Deque<T>::addFirst(T item) {
 }
 
 template<typename T>
-void Deque<T>::addLast(T item) {
-	Deque<T>::Node *t = new Deque<T>::Node(item);
+void RandomizedQueue<T>::addLast(T item) {
+	RandomizedQueue<T>::Node *t = new RandomizedQueue<T>::Node(item);
 	//Increase reference count
 	t->cnt++;
 	//Link to end->prev
@@ -723,8 +713,8 @@ void Deque<T>::addLast(T item) {
 }
 
 template<typename T>
-T Deque<T>::removeFirst() {
-	Deque<T>::Node *t;
+T RandomizedQueue<T>::removeFirst() {
+	RandomizedQueue<T>::Node *t;
 	T temp;
 	if(isEmpty()) {
 		throw runtime_error("Trying to remove from an empty deque!");
@@ -742,15 +732,15 @@ T Deque<T>::removeFirst() {
 	delete t->data;
 	t->data = NULL;
 	//Decrease the reference count of the detached node
-	Deque<T>::Node::decCnt(t);
+	RandomizedQueue<T>::Node::decCnt(t);
 	//Decrease size
 	length--;
 	return temp;
 }
 
 template<typename T>
-T Deque<T>::removeLast() {
-	Deque<T>::Node *t;
+T RandomizedQueue<T>::removeLast() {
+	RandomizedQueue<T>::Node *t;
 	T temp;
 	if(isEmpty()) {
 		throw runtime_error("Trying to remove from an empty deque!");
@@ -768,14 +758,14 @@ T Deque<T>::removeLast() {
 	delete t->data;
 	t->data = NULL;
 	//Decrease the reference count of the detached node
-	Deque<T>::Node::decCnt(t);
+	RandomizedQueue<T>::Node::decCnt(t);
 	//Decrease size
 	length--;
 	return temp;
 }
 
 template<typename T>
-typename Deque<T>::Iterator Deque<T>::iterator() {
+typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::iterator() {
 	if(isEmpty()) {
 		return Iterator(*head);
 	}
