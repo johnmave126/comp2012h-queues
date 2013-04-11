@@ -327,13 +327,13 @@ RandomizedQueue<T>::Iterator::~Iterator() {
 
 template<typename T>
 RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
-:arr_elem(new RandomizedQueue<T>::Node*[q.size()]),
- size_arr(q.size()), loc(0) {
+:arr_elem(new RandomizedQueue<T>::Node*[q.length]),
+ size_arr(q.length), loc(0) {
 	int i;
 	if(size_arr == 0) {
 		return;
 	}
-	_rnd_s *shuffle = new _rnd_s[q.size()];
+	_rnd_s *shuffle = new _rnd_s[q.length];
 	//Generate a iterating sequence
 	//First generate a random number array
 	for(i = 0; i < size_arr; i++) {
@@ -348,6 +348,22 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 	//Initialize reference count
 	arr_elem[loc]->cnt++;
 	delete [] shuffle;
+}
+
+template<typename T>
+RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>::Iterator& itr)
+:arr_elem(new RandomizedQueue<T>::Node*[itr.size_arr]),
+ size_arr(itr.size_arr), loc(itr.findValid()) {
+	int i;
+	//Copy and increase reference count
+	if(loc < size_arr) {
+		itr.arr_elem[loc]->cnt++;
+	}
+	if(size_arr > 0) {
+		for(i = 0; i < size_arr; i++) {
+			arr_elem[i] = itr.arr_elem[i];
+		}
+	}
 }
 
 template<typename T>
