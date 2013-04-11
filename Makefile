@@ -8,6 +8,7 @@ CPPFLAGS=$(CFLAGS)
 
 TMP_PATH=build_tmp
 SRC_PATH=src
+BIN_PATH=bin
 
 all: deque_test rand_test Subset
 
@@ -25,21 +26,25 @@ SUBSET_O=$(TMP_PATH)/Subset.o
 $(DEQUE_TEST_O): $(DEQUE)
 	$(CPP) -o $(DEQUE_TEST_O) -c $(CPPFLAGS) $(SRC_PATH)/main_deque.cpp
 
-deque_test: $(DEQUE_TEST_O) $(DEQUE)
-	$(CPP) -o deque_test $(CPPFLAGS) $(DEQUE_TEST_O)
+deque_test: $(DEQUE_TEST_O) $(DEQUE) $(BIN_PATH)
+	$(CPP) -o $(BIN_PATH)/deque_test $(CPPFLAGS) $(DEQUE_TEST_O)
 
 $(RANDQUE_TEST_O): $(RANDQUE)
 	$(CPP) -o $(RANDQUE_TEST_O) -c $(CPPFLAGS) $(SRC_PATH)/main_rand.cpp
 
-rand_test: $(RANDQUE_TEST_O) $(RANDQUE)
-	$(CPP) -o rand_test $(CPPFLAGS) $(RANDQUE_TEST_O)
+rand_test: $(RANDQUE_TEST_O) $(RANDQUE) $(BIN_PATH)
+	$(CPP) -o $(BIN_PATH)/rand_test $(CPPFLAGS) $(RANDQUE_TEST_O)
 
 $(SUBSET_O): $(SUBSET)
 	$(CPP) -o $(SUBSET_O) -c $(CPPFLAGS) $(SRC_PATH)/Subset.cpp
 
-Subset: $(SUBSET_O)
-	$(CPP) -o Subset $(CPPFLAGS) $(SUBSET_O)
+Subset: $(SUBSET_O) $(BIN_PATH)
+	$(CPP) -o $(BIN_PATH)/Subset $(CPPFLAGS) $(SUBSET_O)
 
-.PHONY : clean
+.PHONY: $(BIN_PATH)
+$(BIN_PATH):
+	mkdir -p $(BIN_PATH)
+
+.PHONY: clean
 clean:
-	rm -f $(TMP_PATH)/*.o rand_test deque_test Palindrome Subset
+	rm -f $(TMP_PATH)/*.o $(BIN_PATH)/*
