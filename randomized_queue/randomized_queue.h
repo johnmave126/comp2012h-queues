@@ -327,7 +327,7 @@ RandomizedQueue<T>::Iterator::~Iterator() {
 
 template<typename T>
 RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
-:arr_elem(new RandomizedQueue<T>::Node*[q.length]),
+:arr_elem(new Node*[q.length]),
  size_arr(q.length), loc(0) {
 	int i;
 	if(size_arr == 0) {
@@ -352,7 +352,7 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 
 template<typename T>
 RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>::Iterator& itr)
-:arr_elem(new RandomizedQueue<T>::Node*[itr.size_arr]),
+:arr_elem(new Node*[itr.size_arr]),
  size_arr(itr.size_arr), loc(itr.findValid()) {
 	int i;
 	//Copy and increase reference count
@@ -551,7 +551,7 @@ void RandomizedQueue<T>::Iterator::shiftNode(int idx) {
 /* RandomizedQueue */
 template<typename T>
 RandomizedQueue<T>::RandomizedQueue()
-:arr_elem(new RandomizedQueue<T>::Node*[RANDOMIZED_QUEUE_BASE]),
+:arr_elem(new Node*[RANDOMIZED_QUEUE_BASE]),
  length(0), size_arr(RANDOMIZED_QUEUE_BASE) {
  	//Reset array
  	memset(arr_elem, 0, size_arr * sizeof(Node*));
@@ -576,7 +576,7 @@ RandomizedQueue<T>::~RandomizedQueue() {
 
 template<typename T>
 RandomizedQueue<T>::RandomizedQueue(const RandomizedQueue<T>& q)
-:arr_elem(new RandomizedQueue<T>::Node*[q.size_arr]),
+:arr_elem(new Node*[q.size_arr]),
  length(0), size_arr(q.size_arr) {
  	int i;
  	for(i = 0; i < q.length; i++) {
