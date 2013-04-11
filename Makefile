@@ -3,7 +3,7 @@ CPP=g++
 AR=ar
 RM=rm
 CP=cp
-CFLAGS=-O2 -Wextra -Wall -g -Idequeue -Irandomized_queue
+CFLAGS=-O0 -Wextra -Wall -g -Idequeue -Irandomized_queue
 CPPFLAGS=$(CFLAGS)
 
 TMP_PATH=build_tmp

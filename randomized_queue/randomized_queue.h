@@ -342,7 +342,7 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 	}
 	//Sort it to get random idx sequence
 	sort(shuffle, shuffle + size_arr, cmp_rnd_s);
-	for(i = 0; i < q.size(); i++) {
+	for(i = 0; i < size_arr; i++) {
 		arr_elem[i] = q.arr_elem[shuffle[i].idx];
 	}
 	//Initialize reference count
