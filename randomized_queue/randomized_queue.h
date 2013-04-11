@@ -437,7 +437,7 @@ T* RandomizedQueue<T>::Iterator::operator->() const{
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator++() {
-	int new_loc;
+	int preserve_loc, new_loc;
 	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
@@ -450,8 +450,10 @@ typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator++(
 	if(loc == size_arr) {
 		throw runtime_error("At the end of the randomized queue!");
 	}
+	preserve_loc = loc;
 	loc++;
 	new_loc = findValid();
+	loc = preserve_loc;
 	shiftNode(new_loc);
 	return (*this);
 }
@@ -466,7 +468,7 @@ typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator++(i
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator--() {
-	int new_loc;
+	int preserve_loc, new_loc;
 	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
@@ -479,8 +481,10 @@ typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator--(
 	if(loc == 0) {
 		throw runtime_error("At the beginning of the randomized queue!");
 	}
+	preserve_loc = loc;
 	loc--;
 	new_loc = findValidRev();
+	loc = preserve_loc;
 	if(new_loc < 0) {
 		//Restore
 		loc++;
@@ -536,12 +540,12 @@ int RandomizedQueue<T>::Iterator::findValidRev() const {
 
 template<typename T>
 void RandomizedQueue<T>::Iterator::shiftNode(int idx) {
-	if(idx != size_arr) {
-		//Shift to a existing node
+	if(idx < size_arr) {
+		//Shift to an existing node
 		//Thread safety
 		arr_elem[idx]->cnt++;
 	}
-	if(loc != size_arr) {
+	if(loc < size_arr) {
 		//Release element
 		Node::decCnt(arr_elem[loc]);
 	}
