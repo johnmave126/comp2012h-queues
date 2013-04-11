@@ -207,16 +207,6 @@ class RandomizedQueue<T>::Iterator {
 		 */
 		void shiftNode(int idx);
 		
-		/* used for sort */
-		struct _rnd_s {
-			int number;
-			int idx;
-		};
-		
-		static bool cmp_rnd_s(const _rnd_s& a, const _rnd_s& b) {
-			return (a.number < b.number);
-		}
-		
 		//Pointer to random element array
 		Node **arr_elem;
 		
@@ -329,25 +319,25 @@ template<typename T>
 RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 :arr_elem(new Node*[q.length]),
  size_arr(q.length), loc(0) {
-	int i;
+	int i, r_id;
+	Node *tmp;
 	if(size_arr == 0) {
 		return;
 	}
-	_rnd_s *shuffle = new _rnd_s[q.length];
-	//Generate a iterating sequence
-	//First generate a random number array
+	//First copy as it is
 	for(i = 0; i < size_arr; i++) {
-		shuffle[i].number = rand();
-		shuffle[i].idx = i;
+		arr_elem[i] = q.arr_elem[i];
 	}
-	//Sort it to get random idx sequence
-	sort(shuffle, shuffle + size_arr, cmp_rnd_s);
+	//Shuffle it randomly
 	for(i = 0; i < size_arr; i++) {
-		arr_elem[i] = q.arr_elem[shuffle[i].idx];
+		r_id = i + (int)(1.0 * rand() / RAND_MAX *(size_arr - i));
+		//Swap to a index current-or-later
+		tmp = arr_elem[i];
+		arr_elem[i] = arr_elem[r_id];
+		arr_elem[r_id] = tmp;
 	}
 	//Initialize reference count
 	arr_elem[loc]->cnt++;
-	delete [] shuffle;
 }
 
 template<typename T>
