@@ -41,11 +41,9 @@ $(SUBSET_O): $(SUBSET) $(TMP_PATH)
 Subset: $(SUBSET_O) $(BIN_PATH)
 	$(CPP) -o $(BIN_PATH)/Subset $(CPPFLAGS) $(SUBSET_O)
 
-.PHONY: $(TMP_PATH)
 $(TMP_PATH):
 	mkdir -p $(TMP_PATH)
 
-.PHONY: $(BIN_PATH)
 $(BIN_PATH):
 	mkdir -p $(BIN_PATH)
 
