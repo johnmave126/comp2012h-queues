@@ -84,6 +84,7 @@ int main(int argc, char ** argv){
 			if(num_output <= 0L) {
 				cout << "Subset: positive NUMBER needed" << endl;
 				cout << "Try `Subset -h' for more information." << endl;
+				exit(EXIT_FAILURE);
 			}
 			
 			//Go on to process stdin
