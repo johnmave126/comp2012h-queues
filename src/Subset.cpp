@@ -12,6 +12,7 @@
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include "randomized_queue.h"
 
