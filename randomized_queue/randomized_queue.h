@@ -460,7 +460,7 @@ template<typename T>
 typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator++(int) {
 	//Reuse prefix ++
 	Iterator tmp = *this;
-	(*this)++;
+	++(*this);
 	return tmp;
 }
 
@@ -494,7 +494,7 @@ template<typename T>
 typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator--(int) {
 	//Reuse prefix --
 	Iterator tmp = *this;
-	(*this)--;
+	--(*this);
 	return tmp;
 }
 

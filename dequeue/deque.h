@@ -543,7 +543,7 @@ template<typename T>
 typename Deque<T>::Iterator Deque<T>::Iterator::operator++(int) {
 	//Reuse prefix ++
 	Iterator tmp = *this;
-	(*this)++;
+	++(*this);
 	return tmp;
 }
 
@@ -576,7 +576,7 @@ template<typename T>
 typename Deque<T>::Iterator Deque<T>::Iterator::operator--(int) {
 	//Reuse prefix --
 	Iterator tmp = *this;
-	(*this)--;
+	--(*this);
 	return tmp;
 }
 
