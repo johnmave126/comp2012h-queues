@@ -338,7 +338,7 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>::Iterator& itr)
 	int i;
 	//Copy and increase reference count
 	for(i = 0; i < size_arr; i++) {
-		itr.arr_elem[loc]->cnt++;
+		itr.arr_elem[i]->cnt++;
 	}
 	if(size_arr > 0) {
 		for(i = 0; i < size_arr; i++) {
