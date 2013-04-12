@@ -173,7 +173,7 @@ void test_suite2() {
 	cout << "End Test Suite 2" << endl << endl;
 }
 
-int main(int argc, char ** argv){
+int main(void){
 	srand(time(0));
 	
 	test_suite1();

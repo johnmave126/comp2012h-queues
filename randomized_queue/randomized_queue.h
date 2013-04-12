@@ -198,15 +198,6 @@ class RandomizedQueue<T>::Iterator {
 		 */
 		int findValidRev() const;
 		
-		/*
-		 * shiftNode
-		 *
-		 * idx: the index of the node to change to
-		 *
-		 * change the node the iterator pointing to to node
-		 */
-		void shiftNode(int idx);
-		
 		//Pointer to random element array
 		Node **arr_elem;
 		
@@ -306,10 +297,11 @@ RandomizedQueue<T>::Iterator::Iterator()
 
 template<typename T>
 RandomizedQueue<T>::Iterator::~Iterator() {
+	int i;
 	if(arr_elem) {
 		//Decrement reference count
-		if(loc < size_arr) {
-			Node::decCnt(arr_elem[loc]);
+		for(i = 0; i < size_arr; i++) {
+			Node::decCnt(arr_elem[i]);
 		}
 		delete [] arr_elem;
 	}
@@ -327,6 +319,7 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 	//First copy as it is
 	for(i = 0; i < size_arr; i++) {
 		arr_elem[i] = q.arr_elem[i];
+		arr_elem[i]->cnt++;
 	}
 	//Shuffle it randomly
 	for(i = 0; i < size_arr; i++) {
@@ -336,8 +329,6 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>& q)
 		arr_elem[i] = arr_elem[r_id];
 		arr_elem[r_id] = tmp;
 	}
-	//Initialize reference count
-	arr_elem[loc]->cnt++;
 }
 
 template<typename T>
@@ -346,7 +337,7 @@ RandomizedQueue<T>::Iterator::Iterator(const RandomizedQueue<T>::Iterator& itr)
  size_arr(itr.size_arr), loc(itr.findValid()) {
 	int i;
 	//Copy and increase reference count
-	if(loc < size_arr) {
+	for(i = 0; i < size_arr; i++) {
 		itr.arr_elem[loc]->cnt++;
 	}
 	if(size_arr > 0) {
@@ -360,9 +351,9 @@ template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator=(const RandomizedQueue<T>::Iterator& itr) {
 	int i;
 	if(arr_elem) {
-		if(loc < size_arr) {
+		for(i = 0; i < size_arr; i++) {
 			//Decrement reference count
-			Node::decCnt(arr_elem[loc]);
+			Node::decCnt(arr_elem[i]);
 		}
 		delete [] arr_elem;
 		arr_elem = NULL;
@@ -370,8 +361,8 @@ typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator=(c
 	//Copy and increase reference count
 	size_arr = itr.size_arr;
 	loc = itr.findValid();
-	if(loc < size_arr) {
-		itr.arr_elem[loc]->cnt++;
+	for(i = 0; i < size_arr; i++) {
+		itr.arr_elem[i]->cnt++;
 	}
 	if(size_arr > 0) {
 		arr_elem = new Node*[size_arr];
@@ -388,7 +379,7 @@ T& RandomizedQueue<T>::Iterator::operator*() {
 		throw runtime_error("Uninitialized iterator!");
 	}
 	int tid = findValid();
-	shiftNode(tid);
+	loc = tid;
 	if(tid >= size_arr) {
 		//End of a queue
 		throw runtime_error("End of randomized queue!");
@@ -427,24 +418,18 @@ T* RandomizedQueue<T>::Iterator::operator->() const{
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator++() {
-	int preserve_loc, new_loc;
 	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
 	if(size_arr == 0) {
 		throw runtime_error("Empty randomized queue!");
 	}
-	new_loc = findValid();
-	//Shift to valid node
-	shiftNode(new_loc);
+	loc = findValid();
 	if(loc == size_arr) {
 		throw runtime_error("At the end of the randomized queue!");
 	}
-	preserve_loc = loc;
 	loc++;
-	new_loc = findValid();
-	loc = preserve_loc;
-	shiftNode(new_loc);
+	loc = findValid();
 	return (*this);
 }
 
@@ -458,29 +443,25 @@ typename RandomizedQueue<T>::Iterator RandomizedQueue<T>::Iterator::operator++(i
 
 template<typename T>
 typename RandomizedQueue<T>::Iterator& RandomizedQueue<T>::Iterator::operator--() {
-	int preserve_loc, new_loc;
+	int preserve_loc;
 	if(!arr_elem) {
 		throw runtime_error("Uninitialized iterator!");
 	}
 	if(size_arr == 0) {
 		throw runtime_error("Empty randomized queue!");
 	}
-	new_loc = findValid();
-	//Shift to valid node
-	shiftNode(new_loc);
+	loc = findValid();
 	if(loc == 0) {
 		throw runtime_error("At the beginning of the randomized queue!");
 	}
 	preserve_loc = loc;
 	loc--;
-	new_loc = findValidRev();
-	loc = preserve_loc;
-	if(new_loc < 0) {
+	loc = findValidRev();
+	if(loc < 0) {
 		//Restore
-		loc++;
+		loc = preserve_loc;
 		throw runtime_error("At the beginning of the randomized queue!");
 	}
-	shiftNode(new_loc);
 	return (*this);
 }
 
@@ -526,20 +507,6 @@ int RandomizedQueue<T>::Iterator::findValidRev() const {
 	for(i = loc - 1; i >= 0 && !arr_elem[i]->data; i--) {
 	}
 	return i;
-}
-
-template<typename T>
-void RandomizedQueue<T>::Iterator::shiftNode(int idx) {
-	if(idx < size_arr) {
-		//Shift to an existing node
-		//Thread safety
-		arr_elem[idx]->cnt++;
-	}
-	if(loc < size_arr) {
-		//Release element
-		Node::decCnt(arr_elem[loc]);
-	}
-	loc = idx;
 }
 
 /* RandomizedQueue */
@@ -646,6 +613,7 @@ T RandomizedQueue<T>::dequeue() {
 	//Swap this with the last one in the array
 	t = arr_elem[rm_id];
 	arr_elem[rm_id] = arr_elem[length - 1];
+	arr_elem[length - 1] = NULL;
 	//Shrink
 	length--;
 	//Test space
@@ -658,7 +626,6 @@ T RandomizedQueue<T>::dequeue() {
 		arr_elem = new_mem;
 	}
 	temp = *(t->data);
-	arr_elem[length] = NULL;
 	delete t->data;
 	t->data = NULL;
 	Node::decCnt(t);
