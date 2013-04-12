@@ -7,6 +7,15 @@ ID: 20090398
 Login: stanab
 Hours to complete assignment (optional): 24
 
+/**********************************************************************
+ *  How to Compile
+ **********************************************************************/
+> make
+It will generate four executable file in bin directory.
+rand_test -> to test the correctness of randomized queue
+deque_test -> to test the correctness of deque
+Subset -> the little tool required
+Palindrome -> the little tool required
 
 /**********************************************************************
  *  Explain briefly how you implemented the randomized queue and deque.
