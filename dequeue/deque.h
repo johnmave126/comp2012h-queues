@@ -365,6 +365,14 @@ Deque<T>::Iterator::Iterator(Deque<T>::Node& p)
 }
 
 template<typename T>
+Deque<T>::Iterator::Iterator(const Deque<T>::Iterator& itr)
+:elem(itr.findValid()) {
+	if(elem) {
+		elem->cnt++;
+	}
+}
+
+template<typename T>
 typename Deque<T>::Iterator& Deque<T>::Iterator::operator=(const Deque<T>::Iterator& itr) {
 	if(elem) {
 		//Decrement reference count
@@ -391,9 +399,14 @@ T& Deque<T>::Iterator::operator*() {
 		throw runtime_error("Iterator no longer valid!");
 	}
 	shiftNode(t);
-	if(!elem->data) {
-		//head or end of a deque
+	if(!elem->prev && elem->next) {
+		//head of a deque
+		//Indicate empty deque
 		throw runtime_error("Empty deque!");
+	}
+	if(!elem->next && elem->prev) {
+		//end of a deque
+		throw runtime_error("End of deque!");
 	}
 	return *(elem->data);
 }
@@ -414,9 +427,14 @@ T& Deque<T>::Iterator::operator*() const{
 		//Not valid or pointed to a invalid one
 		throw runtime_error("Iterator no longer valid!");
 	}
-	if(!elem->data) {
-		//head or end of a deque
+	if(!elem->prev && elem->next) {
+		//head of a deque
+		//Indicate empty
 		throw runtime_error("Empty deque!");
+	}
+	if(!elem->next && elem->prev) {
+		//end of a deque
+		throw runtime_error("End of deque!");
 	}
 	return *(elem->data);
 }
@@ -558,13 +576,13 @@ typename Deque<T>::Iterator& Deque<T>::Iterator::operator--() {
 	if(!elem) {
 		throw runtime_error("Iterator no longer valid!");
 	}
-	if(!elem->data) {
+	if(!elem->prev && elem->next) {
 		//head of deque
 		//deque is empty
 		throw runtime_error("Empty deque!");
 	}
 	if(!elem->prev->prev) {
-		//end of the deque
+		//beginning of the deque
 		throw runtime_error("At the beginning of the deque!");
 	}
 	//Move to previous
