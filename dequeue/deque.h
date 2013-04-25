@@ -50,14 +50,14 @@ class Deque {
          *
          * return true if the dequeue is empty
          */
-        bool isEmpty() const;
+        inline bool isEmpty() const;
         
         /*
          * size
          *
          * return the size of the dequeue
          */
-        int size() const;
+        inline int size() const;
         
         /*
          * addFirst
@@ -66,7 +66,7 @@ class Deque {
          *
          * insert the item at the front of the dequeue
          */
-        void addFirst(T item);
+        inline void addFirst(T item);
         
         /*
          * addLast
@@ -75,7 +75,7 @@ class Deque {
          *
          * insert the item at the end of the dequeue
          */
-        void addLast(T item);
+        inline void addLast(T item);
         
         /*
          * removeFirst
@@ -235,7 +235,7 @@ class Deque<T>::Iterator {
          *
          * change the node the iterator pointing to to node
          */
-        void shiftNode(Node* node);
+        inline void shiftNode(Node* node);
         
         //Pointer to element
         Node *elem;
@@ -629,7 +629,7 @@ typename Deque<T>::Node* Deque<T>::Iterator::findValid() const {
 }
 
 template<typename T>
-void Deque<T>::Iterator::shiftNode(Deque<T>::Node* node) {
+inline void Deque<T>::Iterator::shiftNode(Deque<T>::Node* node) {
     if(node) {
         //Shift to a existing node
         //Thread safety
@@ -703,17 +703,17 @@ Deque<T>& Deque<T>::operator=(const Deque<T>& q) {
 }
 
 template<typename T>
-bool Deque<T>::isEmpty() const {
+inline bool Deque<T>::isEmpty() const {
     return head->next == end;
 }
 
 template<typename T>
-int Deque<T>::size() const {
+inline int Deque<T>::size() const {
     return length;
 }
 
 template<typename T>
-void Deque<T>::addFirst(T item) {
+inline void Deque<T>::addFirst(T item) {
     Node *t = new Node(item);
     //Increase reference count
     t->cnt++;
@@ -728,7 +728,7 @@ void Deque<T>::addFirst(T item) {
 }
 
 template<typename T>
-void Deque<T>::addLast(T item) {
+inline void Deque<T>::addLast(T item) {
     Node *t = new Node(item);
     //Increase reference count
     t->cnt++;
